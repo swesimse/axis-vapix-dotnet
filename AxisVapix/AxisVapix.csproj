@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicDeviceInfo.cs" />
+    <Compile Include="RecodingListById.cs" />
     <Compile Include="VapixClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
