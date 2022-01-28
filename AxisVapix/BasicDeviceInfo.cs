@@ -23,7 +23,7 @@ namespace Swesim.Axis.Vapix
         }
     }
 
-    public class BasicDeviceInfo
+    public class BasicDeviceInfoResponse
     {
         [JsonProperty("apiVersion")]
         public double ApiVersion;

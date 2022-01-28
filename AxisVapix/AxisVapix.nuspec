@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AxisVapix</id>
+    <version>$version$</version>
+    <title>AxisVapix</title>
+    <authors>Swesim</authors>
+    <owners>Swesim</owners>
+	<license type="expression">GPL-3.0-only</license>
+    <projectUrl>https://github.com/swesimse/axis-vapix-dotnet</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A .Net library for communicating with Axis network camera hardware</description>
+    <copyright>Copyright 2022</copyright>
+    <tags>Axis</tags>
+	  <dependencies>
+		  <group targetFramework="net461">
+			  <dependency id="Newtonsoft.Json" version="13.0.1" />
+		  </group>
+	  </dependencies>
+  </metadata>
+</package>

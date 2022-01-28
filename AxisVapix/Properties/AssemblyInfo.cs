@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("AxisVapix")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("A .Net library for communicating with Axis network camera hardware")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Swesim")]
 [assembly: AssemblyProduct("AxisVapix")]
 [assembly: AssemblyCopyright("Copyright ©  2022")]
 [assembly: AssemblyTrademark("")]

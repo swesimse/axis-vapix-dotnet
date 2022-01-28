@@ -47,10 +47,13 @@
   <ItemGroup>
     <Compile Include="BasicDeviceInfo.cs" />
     <Compile Include="RecodingListById.cs" />
+    <Compile Include="StartRecording.cs" />
+    <Compile Include="StopRecording.cs" />
     <Compile Include="VapixClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AxisVapix.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

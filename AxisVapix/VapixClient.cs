@@ -28,23 +28,61 @@ namespace Swesim.Axis.Vapix
             this.httpClient.BaseAddress = baseUri;
         }
 
-        public BasicDeviceInfo GetAllDeviceProperties()
+        public BasicDeviceInfoResponse GetAllDeviceProperties()
         {
             string jsonBody = JsonConvert.SerializeObject(new BasicDeviceRequest(1.0, "Client defined request ID", "getAllProperties"));
             string result = SendVapixHttpRequest("basicdeviceinfo.cgi", HttpMethod.POST, null, jsonBody);
-            var resultObject = JsonConvert.DeserializeObject<BasicDeviceInfo>(result);
+            var resultObject = JsonConvert.DeserializeObject<BasicDeviceInfoResponse>(result);
             return resultObject;
         }
 
-        public RecodingListById ListRecordings(int numberOfRecordings = 10, int offset = -1)
+        public RecordingListByIdResponse ListRecordings(int numberOfRecordings = 10, int offset = -1)
         {
             string parameters = "recordingid=all&maxnumberofresults=" + numberOfRecordings;
             if (offset > 0)
                 parameters += "&startatresultnumber=" + offset;
             string result = SendVapixHttpRequest("record/list.cgi", HttpMethod.GET, parameters);
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(RecodingListById));
-            RecodingListById recordingList = (RecodingListById)xmlSerializer.Deserialize(new StringReader(result));
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(RecordingListByIdResponse));
+            RecordingListByIdResponse recordingList = (RecordingListByIdResponse)xmlSerializer.Deserialize(new StringReader(result));
             return recordingList;
+        }
+
+        public RecordingListByIdResponse GetRecording(string recordingId)
+        {
+            string parameters = "recordingid=" + recordingId;
+            string result = SendVapixHttpRequest("record/list.cgi", HttpMethod.GET, parameters);
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(RecordingListByIdResponse));
+            RecordingListByIdResponse recordingList = (RecordingListByIdResponse)xmlSerializer.Deserialize(new StringReader(result));
+            return recordingList;
+        }
+
+        public StartRecordingResponse StartRecording(string storageDiskId)
+        {
+            string result = SendVapixHttpRequest("record/record.cgi", HttpMethod.GET, "diskid=" + storageDiskId);
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(StartRecordingResponse));
+            StartRecordingResponse recordingResponse = (StartRecordingResponse)xmlSerializer.Deserialize(new StringReader(result));
+            return recordingResponse;
+        }
+
+        public StopRecordingResponse StopRecording(string recordingId)
+        {
+            string result = SendVapixHttpRequest("record/stop.cgi", HttpMethod.GET, "recordingid=" + recordingId);
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(StopRecordingResponse));
+            StopRecordingResponse recordingResponse = (StopRecordingResponse)xmlSerializer.Deserialize(new StringReader(result));
+            return recordingResponse;
+        }
+
+        public string DownloadRecording(string recordingId, string diskId)
+        {
+            string endpoint = "record/export/exportrecording.cgi";
+            string parameters = "?schemaversion=1&recordingid=" + recordingId + "&diskid=" + diskId  + "&exportformat=matroska";
+            string fileName = recordingId + ".mkv";
+            using (var client = new WebClient())
+            {
+                client.Credentials = new NetworkCredential(username, password);
+                client.DownloadFile(httpClient.BaseAddress + endpoint + parameters, fileName);
+            }
+            return fileName;
         }
 
         private string SendVapixHttpRequest(string endPoint, HttpMethod method, string queryStringParameters = null, string body = null)

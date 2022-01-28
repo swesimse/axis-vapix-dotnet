@@ -6,7 +6,7 @@ namespace Swesim.Axis.Vapix
 	// Generated using https://json2csharp.com/xml-to-csharp
 
 	[XmlRoot(ElementName = "root")]
-	public class RecodingListById
+	public class RecordingListByIdResponse
 	{
 
 		[XmlElement(ElementName = "recordings")]
