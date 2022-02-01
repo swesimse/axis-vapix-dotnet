@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Web;
 using System.Xml.Serialization;
 
 namespace Swesim.Axis.Vapix
@@ -56,9 +57,12 @@ namespace Swesim.Axis.Vapix
             return recordingList;
         }
 
-        public StartRecordingResponse StartRecording(string storageDiskId)
+        public StartRecordingResponse StartRecording(string storageDiskId, string streamProfile = null)
         {
-            string result = SendVapixHttpRequest("record/record.cgi", HttpMethod.GET, "diskid=" + storageDiskId);
+            string parameters = "diskid=" + storageDiskId;
+            if (streamProfile != null)
+                parameters += "&options=" + "streamprofile%3D" + streamProfile;
+            string result = SendVapixHttpRequest("record/record.cgi", HttpMethod.GET, parameters);
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(StartRecordingResponse));
             StartRecordingResponse recordingResponse = (StartRecordingResponse)xmlSerializer.Deserialize(new StringReader(result));
             return recordingResponse;
