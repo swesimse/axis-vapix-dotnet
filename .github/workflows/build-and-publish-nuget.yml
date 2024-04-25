@@ -3,7 +3,9 @@ name: Build, test and publish .NET library (NuGet)
 on:
   push:
     branches: [ main ]
-
+defaults:
+ run:
+  working-directory: ./AxisVapix
 jobs:
   build:
     runs-on: ubuntu-latest
