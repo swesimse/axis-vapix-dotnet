@@ -1,32 +1,34 @@
 ﻿using Newtonsoft.Json;
+using Swesim.Axis.Vapix.ExtensionMethods;
 using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Web;
 using System.Xml.Serialization;
 
 namespace Swesim.Axis.Vapix
 {
     public class VapixClient
     {
-        private IPAddress deviceIp;
-        private string username;
-        private string password;
-        private HttpClient httpClient;
+        private readonly string username;
+        private readonly string password;
+        private readonly HttpClient httpClient;
 
         public VapixClient(IPAddress deviceIp, string username, string password)
         {
-            this.deviceIp = deviceIp;
             this.username = username;
             this.password = password;
             var baseUri = new Uri($"http://{deviceIp}/axis-cgi/");
-            var credentialsCache = new CredentialCache();
-            credentialsCache.Add(baseUri, "Digest", new NetworkCredential(this.username, this.password));
+            var credentialsCache = new CredentialCache
+            {
+                { baseUri, "Digest", new NetworkCredential(this.username, this.password) }
+            };
             var handler = new HttpClientHandler() { Credentials = credentialsCache, PreAuthenticate = true };
-            this.httpClient = new HttpClient(handler);
-            this.httpClient.BaseAddress = baseUri;
+            httpClient = new HttpClient(handler)
+            {
+                BaseAddress = baseUri
+            };
         }
 
         public BasicDeviceInfoResponse GetAllDeviceProperties()
@@ -43,7 +45,7 @@ namespace Swesim.Axis.Vapix
             if (offset > 0)
                 parameters += "&startatresultnumber=" + offset;
             string result = SendVapixHttpRequest("record/list.cgi", HttpMethod.GET, parameters);
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(RecordingListByIdResponse));
+            XmlSerializer xmlSerializer = new(typeof(RecordingListByIdResponse));
             RecordingListByIdResponse recordingList = (RecordingListByIdResponse)xmlSerializer.Deserialize(new StringReader(result));
             return recordingList;
         }
@@ -52,7 +54,7 @@ namespace Swesim.Axis.Vapix
         {
             string parameters = "recordingid=" + recordingId;
             string result = SendVapixHttpRequest("record/list.cgi", HttpMethod.GET, parameters);
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(RecordingListByIdResponse));
+            XmlSerializer xmlSerializer = new(typeof(RecordingListByIdResponse));
             RecordingListByIdResponse recordingList = (RecordingListByIdResponse)xmlSerializer.Deserialize(new StringReader(result));
             return recordingList;
         }
@@ -63,7 +65,7 @@ namespace Swesim.Axis.Vapix
             if (streamProfile != null)
                 parameters += "&options=" + "streamprofile%3D" + streamProfile;
             string result = SendVapixHttpRequest("record/record.cgi", HttpMethod.GET, parameters);
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(StartRecordingResponse));
+            XmlSerializer xmlSerializer = new(typeof(StartRecordingResponse));
             StartRecordingResponse recordingResponse = (StartRecordingResponse)xmlSerializer.Deserialize(new StringReader(result));
             return recordingResponse;
         }
@@ -71,7 +73,7 @@ namespace Swesim.Axis.Vapix
         public StopRecordingResponse StopRecording(string recordingId)
         {
             string result = SendVapixHttpRequest("record/stop.cgi", HttpMethod.GET, "recordingid=" + recordingId);
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(StopRecordingResponse));
+            XmlSerializer xmlSerializer = new(typeof(StopRecordingResponse));
             StopRecordingResponse recordingResponse = (StopRecordingResponse)xmlSerializer.Deserialize(new StringReader(result));
             return recordingResponse;
         }
@@ -79,13 +81,9 @@ namespace Swesim.Axis.Vapix
         public string DownloadRecording(string recordingId, string diskId)
         {
             string endpoint = "record/export/exportrecording.cgi";
-            string parameters = "?schemaversion=1&recordingid=" + recordingId + "&diskid=" + diskId  + "&exportformat=matroska";
+            string parameters = "?schemaversion=1&recordingid=" + recordingId + "&diskid=" + diskId + "&exportformat=matroska";
             string fileName = recordingId + ".mkv";
-            using (var client = new WebClient())
-            {
-                client.Credentials = new NetworkCredential(username, password);
-                client.DownloadFile(httpClient.BaseAddress + endpoint + parameters, fileName);
-            }
+            httpClient.DownloadFileTaskAsync(new Uri(endpoint + parameters), fileName).Wait();
             return fileName;
         }
 
@@ -94,18 +92,15 @@ namespace Swesim.Axis.Vapix
             if (!endPoint.EndsWith(".cgi"))
                 endPoint += ".cgi";
 
-            if (queryStringParameters != null && !queryStringParameters.StartsWith("?"))
+            if (queryStringParameters != null && !queryStringParameters.StartsWith('?'))
                 queryStringParameters = "?" + queryStringParameters;
 
-            switch (method)
+            return method switch
             {
-                case HttpMethod.POST:
-                    return Encoding.UTF8.GetString(httpClient.PostAsync(endPoint + queryStringParameters, new StringContent(body, System.Text.Encoding.UTF8)).Result.Content.ReadAsByteArrayAsync().Result);
-                case HttpMethod.GET:
-                    return Encoding.UTF8.GetString(httpClient.GetAsync(endPoint + queryStringParameters).Result.Content.ReadAsByteArrayAsync().Result);
-            }
-
-            throw new NotSupportedException();
+                HttpMethod.POST => Encoding.UTF8.GetString(httpClient.PostAsync(endPoint + queryStringParameters, new StringContent(body, Encoding.UTF8)).Result.Content.ReadAsByteArrayAsync().Result),
+                HttpMethod.GET => Encoding.UTF8.GetString(httpClient.GetAsync(endPoint + queryStringParameters).Result.Content.ReadAsByteArrayAsync().Result),
+                _ => throw new NotSupportedException(),
+            };
         }
 
         public enum HttpMethod
