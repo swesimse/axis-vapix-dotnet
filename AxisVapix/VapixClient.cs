@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace Swesim.Axis.Vapix
@@ -14,6 +15,7 @@ namespace Swesim.Axis.Vapix
         private readonly string username;
         private readonly string password;
         private readonly HttpClient httpClient;
+        private static TimeSpan defaultTimeout = TimeSpan.FromSeconds(5);
 
         public VapixClient(IPAddress deviceIp, string username, string password)
         {
@@ -27,8 +29,15 @@ namespace Swesim.Axis.Vapix
             var handler = new HttpClientHandler() { Credentials = credentialsCache, PreAuthenticate = true };
             httpClient = new HttpClient(handler)
             {
-                BaseAddress = baseUri
+                BaseAddress = baseUri,
+                Timeout = defaultTimeout
             };
+        }
+
+        public async Task<bool> Connected()
+        {
+            await SendVapixHttpRequestAsync("basicdeviceinfo.cgi", HttpMethod.GET, null);
+            return true;
         }
 
         public BasicDeviceInfoResponse GetAllDeviceProperties()
@@ -99,6 +108,22 @@ namespace Swesim.Axis.Vapix
             {
                 HttpMethod.POST => Encoding.UTF8.GetString(httpClient.PostAsync(endPoint + queryStringParameters, new StringContent(body, Encoding.UTF8)).Result.Content.ReadAsByteArrayAsync().Result),
                 HttpMethod.GET => Encoding.UTF8.GetString(httpClient.GetAsync(endPoint + queryStringParameters).Result.Content.ReadAsByteArrayAsync().Result),
+                _ => throw new NotSupportedException(),
+            };
+        }
+
+        private async Task<string> SendVapixHttpRequestAsync(string endPoint, HttpMethod method, string queryStringParameters = null, string body = null)
+        {
+            if (!endPoint.EndsWith(".cgi"))
+                endPoint += ".cgi";
+
+            if (queryStringParameters != null && !queryStringParameters.StartsWith('?'))
+                queryStringParameters = "?" + queryStringParameters;
+
+            return method switch
+            {
+                HttpMethod.POST => await (await httpClient.PostAsync(endPoint + queryStringParameters, new StringContent(body, Encoding.UTF8))).Content.ReadAsStringAsync(),
+                HttpMethod.GET => await (await httpClient.GetAsync(endPoint + queryStringParameters)).Content.ReadAsStringAsync(),
                 _ => throw new NotSupportedException(),
             };
         }
