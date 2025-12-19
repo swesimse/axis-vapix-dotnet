@@ -8,7 +8,7 @@ defaults:
   working-directory: ./AxisVapix
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     # Setup
@@ -27,12 +27,13 @@ jobs:
     # Test
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    
-    # Publish
-    - name: publish on version change
-      id: publish_nuget
-      uses: rohith/publish-nuget@v2
-      with:
-        # Filepath of the project to be packaged, relative to root of repository
-        PROJECT_FILE_PATH: AxisVapix.csproj
-        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+
+    # Pack
+    - name: Pack
+      run: dotnet pack -c Release --no-build -o .\artifacts
+
+    # Push to nuget.net repository
+    - name: Push
+      run: |
+        dotnet nuget push ".\artifacts\*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        dotnet nuget push ".\artifacts\*.snupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
