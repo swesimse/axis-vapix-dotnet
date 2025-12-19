@@ -20,6 +20,7 @@
     <Version>$(AssemblyVersion)</Version>
     <PackageProjectUrl>https://github.com/swesimse/axis-vapix-dotnet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/swesimse/axis-vapix-dotnet</RepositoryUrl>
+    <IncludeSymbols>True</IncludeSymbols>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\README.md">
